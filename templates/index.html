@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold primary-text">Welcome, {{ session.Name }}!</h2>
+</div>
+<div class="tabs">
+    <ul class="flex border-b">
+        <li class="mr-1">
+            <a class="inline-block py-2 px-4 primary-bg text-white rounded-t tab-link" href="#product-families">Product Families</a>
+        </li>
+        <li>
+            <a class="inline-block py-2 px-4 secondary-bg rounded-t tab-link" href="#projects">Projects</a>
+        </li>
+    </ul>
+    <div id="product-families" class="p-4">
+        <h3 class="text-xl font-semibold primary-text mb-4">Product Families</h3>
+        {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {% for i in range(products|length) %}
+                    {% if IDs[i] %}
+                        {% set thumb_path = 'DB/Product_Pics/' + IDs[i] + '/Thumb.jpg' %}
+                        <a href="{{ url_for('product_page', product_id=IDs[i]) }}" class="block">
+                            <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg">
+                                <img src="{{ url_for('static', filename=thumb_path) }}" alt="{{ products[i] }}" class="w-full h-48 object-cover rounded mb-2" >
+                                <h3 class="text-lg font-semibold primary-text">{{ products[i] }}</h3>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-700">No product families available.</p>
+        {% endif %}
+    </div>
+    <div id="projects" class="p-4 hidden">
+        <h3 class="text-xl font-semibold primary-text mb-4">Projects</h3> {# Added a heading for consistency #}
+        {% if projects %}
+            <ul class="list-disc pl-5">
+                {% for project in projects %}
+                    <li><a href="{{ url_for('project_page', project=project) }}" class="primary-text hover:underline">{{ project }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-700">No projects available.</p>
+        {% endif %}
+    </div>
+</div>
+<script>
+    // Add a specific class to tab navigation links
+    document.querySelectorAll('.tab-link').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault(); // Only prevent default for tab header clicks
+
+            // Hide all tab content sections
+            document.querySelectorAll('.tabs > div:not(.tabs ul)').forEach(div => div.classList.add('hidden'));
+
+            // Show the clicked tab's content
+            document.querySelector(this.getAttribute('href')).classList.remove('hidden');
+
+            // Update tab styling
+            document.querySelectorAll('.tab-link').forEach(a => {
+                a.classList.remove('primary-bg', 'text-white');
+                a.classList.add('secondary-bg');
+            });
+            this.classList.add('primary-bg', 'text-white');
+            this.classList.remove('secondary-bg');
+        });
+    });
+</script>
+{% endblock %}

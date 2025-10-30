@@ -1,0 +1,24 @@
+digraph ProductSearchProcessDetailed {
+    label="Product Search & Dispense Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+    Login [label=<<B>Operator logs in</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Search [label=<<B>Enter product name, family, or tag</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    Backend [label=<<B>Backend queries database</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Results [label=<<B>Display matching products</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Select [label=<<B>Operator selects product</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    View [label=<<B>View product details</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Dispense [label=<<B>Click 'Dispense'</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    BackendLog [label=<<B>Backend logs transaction</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    WebSocket [label=<<B>Send dispense command via WebSocket</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    VLM [label=<<B>VLM Control dispenses product</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Update [label=<<B>Update inventory</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Confirm [label=<<B>Show confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Login -> Search -> Backend -> Results -> Select -> View -> Dispense ->  BackendLog -> WebSocket -> VLM -> Update -> Confirm -> End;
+}

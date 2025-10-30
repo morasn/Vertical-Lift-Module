@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLM - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+        }
+        .primary-bg {
+            background-color: #1e40af; /* Blue for headers and buttons */
+        }
+        .primary-text {
+            color: #1e40af;
+        }
+        .secondary-bg {
+            background-color: #e5e7eb; /* Light gray for secondary elements */
+        }
+        .nav-link {
+            transition: background-color 0.2s;
+        }
+        .nav-link:hover {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <header class="primary-bg text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Vertical Lift Module</h1>
+            {% if session.username %}
+                <div class="flex items-center space-x-4">
+                    <span>Welcome, {{ session.Name }}!</span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Logout</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto p-4">
+            <ul class="flex space-x-4">
+                <li><a href="{{ url_for('index') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Home</a></li>
+                {% if session.Access_Level is defined %}
+                    {% if session.Access_Level > 1 %}
+                        <!-- <li><a href="{{ url_for('view_shelves') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">View Shelves</a></li> -->
+                    {% endif %}
+                    {% if session.Access_Level > 2 %}
+                        <!-- <li><a href="{{ url_for('manage_users') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Manage Users</a></li> -->
+                        <li><a href="{{ url_for('add_product') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Add Product to DB</a></li>
+                    {% endif %}
+                    {% if session.Access_Level > 3 %}
+                        <li><a href="{{ url_for('add_shelf') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Add Shelf to DB</a></li>
+                    {% endif %}
+
+                {% endif %}
+                </ul>
+        </div>
+    </nav>
+    <main class="container mx-auto p-4 flex-grow">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'green' if category == 'success' else 'red' }}-100 border-{{ 'green' if category == 'success' else 'red' }}-400 text-{{ 'green' if category == 'success' else 'red' }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="primary-bg text-white p-4 text-center">
+        <p>© 2025 VLM System. All rights reserved.</p>
+    </footer>
+</body>
+</html>

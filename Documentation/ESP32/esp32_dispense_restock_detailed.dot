@@ -1,0 +1,62 @@
+digraph ESP32DispenseRestockProcessDetailed {
+    label="On-Machine Dispense/Restock Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    // Initialization
+    Start [label=<<B>Start</B><BR/><FONT POINT-SIZE='10'>System powers up</FONT>>, shape=ellipse, style=filled, fillcolor="#cce5ff"];
+    // DisplayStart [label=<<B>Display: Ready</B>>, shape=parallelogram, style=filled, fillcolor="#cce5ff"];
+    KeypadA [label=<<B>Press 'A'</B><BR/><FONT POINT-SIZE='10'>Operator initiates</FONT>>, shape=parallelogram, style=filled, fillcolor="#cce5ff"];
+
+    // Authentication
+    RFID [label=<<B>Scan Operator ID using RFID</B>>, shape=parallelogram, style=filled, fillcolor="#d6eaff"];
+    Auth [label=<<B>Send ID to server</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    AuthCheck [label=<<B>Check Auth (max 3 trials)</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    AuthFail [label=<<B>Auth Fail</B>>, shape=rectangle, style=filled, fillcolor="#f8d7da"];
+    DisplayHome [label=<<B>Display: Returning Home</B>>, shape=parallelogram, style=filled, fillcolor="#f8d7da"];
+
+    // Side Selection
+    SelectSide [label=<<B>Select Side</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    MapSide [label=<<B>Map Side</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    InvalidSide [label=<<B>Invalid Side</B>>, shape=rectangle, style=filled, fillcolor="#f8d7da"];
+    DisplayInvalidSide [label=<<B>Display: Invalid Side</B>>, shape=parallelogram, style=filled, fillcolor="#f8d7da"];
+
+    // Level Selection
+    SelectLevel [label=<<B>Select Level</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    InvalidLevel [label=<<B>Invalid Level</B>>, shape=rectangle, style=filled, fillcolor="#f8d7da"];
+    DisplayInvalidLevel [label=<<B>Display: Invalid Level</B>>, shape=parallelogram, style=filled, fillcolor="#f8d7da"];
+
+    // Operation & Execution
+    SelectOp [label=<<B>Select Operation</B>>, shape=parallelogram, style=filled, fillcolor="#ffe5b4"];
+    Execute [label=<<B>Retrieve Shelf</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    SendUIDs [label=<<B>Send SKUs to Server</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Confirm [label=<<B>User Confirms Operation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    DisplayConfirm [label=<<B>Return Shelf to Position</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da"];
+
+    // Main flow
+    Start -> KeypadA -> RFID -> Auth -> AuthCheck;
+    AuthCheck -> SelectSide [label="Success"];
+    AuthCheck -> AuthFail [label="Fail"];
+    AuthFail -> DisplayHome -> End;
+
+    SelectSide -> MapSide [label="Valid"];
+    SelectSide -> InvalidSide [label="Invalid"];
+    InvalidSide -> DisplayInvalidSide -> SelectSide;
+    MapSide -> SelectLevel;
+ 
+    SelectLevel -> InvalidLevel [label="Invalid"];
+    InvalidLevel -> DisplayInvalidLevel -> SelectLevel;
+
+    SelectLevel -> SelectOp -> Execute -> SendUIDs -> Confirm;
+    Confirm -> DisplayConfirm -> End;
+
+    // Timeout branches
+    RFID -> End [label="Timeout"];
+    SelectSide -> End [label="Timeout"];
+    SelectLevel -> End [label="Timeout"];
+    SelectOp -> End [label="Timeout"];
+}

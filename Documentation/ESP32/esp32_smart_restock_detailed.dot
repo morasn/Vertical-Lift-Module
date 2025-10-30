@@ -1,0 +1,38 @@
+digraph ESP32SmartRestockProcessDetailed {
+    label="ESP32 Smart Restock Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+    Initiate [label=<<B>Operator presses B on Keypad</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    RFID [label=<<B>Scan Operator ID using RFID</B>>, shape=parallelogram, style=filled, fillcolor="#d6eaff"];
+    SendID [label=<<B>Send ID to server</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    AuthCheck [label=<<B>Check Auth (max 3 trials)</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    AuthFail [label=<<B>Auth Fail</B>>, shape=rectangle, style=filled, fillcolor="#f8d7da"];
+    DisplayHome [label=<<B>Display: Returning Home</B>>, shape=parallelogram, style=filled, fillcolor="#f8d7da"];
+    ScanProduct [label=<<B>Scan product RFID</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    ScanTimeout [label=<<B>Product scanned in time?</B>>, shape=diamond, style=filled, fillcolor="#f8d7da"];
+    ScanFail [label=<<B>Scan failed or timeout</B>>, shape=rectangle, style=filled, fillcolor="#f8d7da"];
+    SendUID [label=<<B>Send product UID to server</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    ServerLookup [label=<<B>Server looks up shelf for product</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Command [label=<<B>Server sends shelf move command</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    MoveShelf [label=<<B>ESP32 moves correct shelf to operator</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    PlaceProduct [label=<<B>Operator places product on shelf</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    EnterQty [label=<<B>Enter quantity restocked</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    ConfirmRestock [label=<<B>ESP32 returns shelf to position</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    Update [label=<<B>Server updates inventory</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Initiate -> RFID -> SendID;
+    SendID -> AuthCheck;
+    AuthCheck -> ScanProduct [label="True"];
+    AuthCheck -> AuthFail [label="False"];
+    AuthFail -> DisplayHome -> End;
+    ScanProduct -> ScanTimeout;
+    ScanTimeout -> SendUID [label="True"];
+    ScanTimeout -> ScanFail [label="False"];
+    ScanFail -> End;
+    SendUID -> ServerLookup -> Command -> MoveShelf -> PlaceProduct -> EnterQty -> ConfirmRestock -> Update -> End;
+}

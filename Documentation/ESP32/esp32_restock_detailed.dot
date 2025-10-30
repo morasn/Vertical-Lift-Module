@@ -1,0 +1,99 @@
+digraph ESP32RestockProcessDetailed {
+    label="ESP32 Product Restocking Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    // Stage 1: Initialization
+    subgraph cluster_0 {
+        label = "Stage 1: Initialization";
+        style=filled;
+        color="#cce5ff";
+        InitDesc [label="System powers up and displays ready message. Operator initiates restock by pressing 'D' on keypad.", shape=note, style=filled, fillcolor="#e3f2fd", fontname="Times New Roman"];
+        Start;
+        DisplayStart;
+        KeypadD;
+    }
+
+    // Stage 2: Authentication
+    subgraph cluster_1 {
+        label = "Stage 2: Authentication";
+        style=filled;
+        color="#d6eaff";
+        AuthDesc [label="Operator scans RFID. System sends RFID to server and awaits authentication. If authentication fails, process ends.", shape=note, style=filled, fillcolor="#e3f2fd", fontname="Times New Roman"];
+        RFID;
+        Auth;
+        AuthCheck [label=<<B>Check Auth (max 3 trials)</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+        AuthFail;
+        DisplayHome;
+    }
+
+    // Stage 3: Shelf Selection
+    subgraph cluster_2 {
+        label = "Stage 3: Shelf Selection";
+        style=filled;
+        color="#fff9e5";
+        ShelfDesc [label="Operator selects shelf (A/B, level). If product is being stored for the first time, system allocates shelf and position.", shape=note, style=filled, fillcolor="#fffbe6", fontname="Times New Roman"];
+        SelectSide;
+        MapSide;
+        SelectLevel;
+        Floor;
+        InvalidSide;
+        DisplayInvalidSide;
+        InvalidLevel;
+        DisplayInvalidLevel;
+        AllocateShelf [label="Allocate shelf/position for new product", shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    }
+
+    // Stage 4: Restock Operation
+    subgraph cluster_3 {
+        label = "Stage 4: Restock Operation";
+        style=filled;
+        color="#ffe5b4";
+        RestockDesc [label="System sends restock command to server. Product is placed on shelf. System updates DB and confirms.", shape=note, style=filled, fillcolor="#fff3e0", fontname="Times New Roman"];
+        SendFloor;
+        ExecuteRestock [label="Execute Restock", shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+        SendUIDs;
+        Confirm;
+        DisplayConfirm;
+        End;
+    }
+
+    // Main flow
+    Start -> DisplayStart -> KeypadD -> RFID -> Auth -> AuthCheck;
+    AuthCheck -> SelectSide [label="Success"];
+    AuthCheck -> AuthFail [label="Fail"];
+    AuthFail -> DisplayHome -> End;
+
+    // Shelf selection and allocation
+    SelectSide -> MapSide [label="Valid Side"];
+    SelectSide -> InvalidSide [label="Invalid Side (not A/B)"];
+    InvalidSide -> DisplayInvalidSide -> SelectSide;
+    MapSide -> SelectLevel -> Floor;
+    SelectLevel -> AllocateShelf [label="If new product"];
+    AllocateShelf -> Floor;
+    Floor -> SendFloor [label="Valid Level"];
+    Floor -> InvalidLevel [label="Invalid Level (>10)"];
+    InvalidLevel -> DisplayInvalidLevel -> SelectLevel;
+
+    // Restock operation
+    SendFloor -> ExecuteRestock -> SendUIDs -> Confirm;
+    Confirm -> DisplayConfirm -> End;
+
+    // Timeout branches for inactivity
+    KeypadD -> End [label="Timeout (1 min)"];
+    RFID -> End [label="Timeout (1 min)"];
+    SelectSide -> End [label="Timeout (1 min)"];
+    SelectLevel -> End [label="Timeout (1 min)"];
+
+    // Display options for user feedback
+    DisplayAuth [label=<<B>Display: Awaiting Authentication</B>>, shape=parallelogram, style=filled, fillcolor="#d6eaff"];
+    DisplaySelectSide [label=<<B>Display: Select Side (A/B)</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    DisplaySelectLevel [label=<<B>Display: Enter Level (0-10)</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    DisplayConfirm [label=<<B>Display: Confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    Auth -> DisplayAuth;
+    SelectSide -> DisplaySelectSide;
+    SelectLevel -> DisplaySelectLevel;
+    Confirm -> DisplayConfirm -> End;
+}

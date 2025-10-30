@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block title %}Add Product{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold primary-text mb-6">Add New Product</h2>
+    <form method="POST" action="{{ url_for('add_product') }}" enctype="multipart/form-data">
+        <div class="mb-4">
+            <label for="product_id" class="block text-gray-700">Product ID</label>
+            <input type="text" id="product_id" name="product_id" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="name" class="block text-gray-700">Name</label>
+            <input type="text" id="name" name="name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="description" class="block text-gray-700">Description</label>
+            <textarea id="description" name="description" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+        </div>
+        <div class="mb-4">
+            <label for="family_name" class="block text-gray-700">Family Name</label>
+            <input type="text" id="family_name" name="family_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" list="family_names" required>
+            <datalist id="family_names">
+            </datalist>
+        </div>
+        <div class="mb-4">
+            <label for="family_item" class="block text-gray-700">Family Item</label>
+            <input type="text" id="family_item" name="family_item" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="weight" class="block text-gray-700">Weight (grams)</label>
+            <input type="number" id="weight" name="weight" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="length" class="block text-gray-700">Length (cm)</label>
+            <input type="number" id="length" name="length" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="width" class="block text-gray-700">Width (cm)</label>
+            <input type="number" id="width" name="width" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="height" class="block text-gray-700">Height (cm)</label>
+            <input type="number" id="height" name="height" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="rop" class="block text-gray-700">Reorder Point</label>
+            <input type="number" id="rop" name="rop" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="oh" class="block text-gray-700">On-Hand Quantity</label>
+            <input type="number" id="oh" name="oh" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="tags" class="block text-gray-700">Tags (comma-separated)</label>
+            <input type="text" id="tags" name="tags" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-4">
+            <label for="projects" class="block text-gray-700">Projects</label>
+            <input type="text" id="projects" name="projects" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" list="project_suggestions" required>
+            <datalist id="project_suggestions">
+            </datalist>
+        </div>
+        <div class="mb-4">
+            <label for="photos" class="block text-gray-700">Product Icon</label>
+            <input type="file" id="thumb" name="thumb" multiple class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="mb-4">
+            <label for="photos" class="block text-gray-700">Photos</label>
+            <input type="file" id="photos" name="photos" multiple class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="primary-bg text-white py-2 px-6 rounded hover:bg-blue-700">Add Product</button>
+        </div>
+    </form>
+</div>
+<script>
+    const familyInput = document.getElementById('family_name');
+    const familyDatalist = document.getElementById('family_names');
+    const projectsInput = document.getElementById('projects');
+    const projectsDatalist = document.getElementById('project_suggestions');
+    const form = document.querySelector('form');
+
+    // Autocomplete for Family Name
+    familyInput.addEventListener('input', function() {
+        const query = this.value;
+        if (query.length < 1) {
+            familyDatalist.innerHTML = '';
+            return;
+        }
+        fetch(`/api/family_names?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                familyDatalist.innerHTML = '';
+                data.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    familyDatalist.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching family names:', error));
+    });
+
+    // Function to handle autocomplete for a given input
+    function attachProjectAutocomplete(input) {
+        input.addEventListener('input', function handler(e) {
+            const query = this.value.trim();
+            if (query.length < 1) {
+                projectsDatalist.innerHTML = '';
+                return;
+            }
+            fetch(`/api/projects?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    projectsDatalist.innerHTML = '';
+                    data.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project;
+                        projectsDatalist.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching projects:', error));
+
+            // Add new box only if this input is filled and it's the last one
+            const allProjectInputs = form.querySelectorAll('input[name="projects"]');
+            const isLastInput = allProjectInputs[allProjectInputs.length - 1] === this;
+            if (this.value.trim().length > 0 && isLastInput) {
+                const newInput = document.createElement('input');
+                newInput.type = 'text';
+                newInput.name = 'projects';
+                newInput.className = 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2';
+                newInput.id = `projects_${Date.now()}`; // Unique ID
+                newInput.setAttribute('list', 'project_suggestions');
+                newInput.required = false; // Make new inputs optional
+                // Insert after the current input
+                this.parentNode.appendChild(newInput);
+                // Attach autocomplete to the new input
+                attachProjectAutocomplete(newInput);
+            }
+        });
+    }
+
+    // Attach autocomplete to the initial projects input
+    attachProjectAutocomplete(projectsInput);
+</script>
+{% endblock %}

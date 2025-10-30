@@ -1,0 +1,30 @@
+digraph sqlite_schema {
+    rankdir=LR;
+    fontname="Times New Roman";
+    node [shape=record, fontname="Times New Roman"];
+
+    // Main entity tables
+    PRODUCTS [label="{PRODUCTS|ID : TEXT (PK)\lName : TEXT\lDescription : TEXT\lFamily_Name : TEXT\lFamily_Item : TEXT\lWeight : FLOAT\lROP : INT\lOH : INT\lLength : FLOAT\lWidth : FLOAT\lHeight : FLOAT\l}", style=filled, fillcolor="#cce5ff"];
+    OPERATORS [label="{OPERATORS|ID : INT (PK)\lNAME : TEXT\lUsername : TEXT\lPassword : TEXT\lPassword_Salt : TEXT\lAccess_Level : INT\l}", style=filled, fillcolor="#cce5ff"];
+
+    // Secondary tables
+    SHELVES [label="{SHELVES|ID : TEXT (PK)\lPos : CHAR(3)\lWeight : FLOAT\lQuantity : INT\lSpaceLeft : INT\lRacksAvailable : INT\l}", style=filled, fillcolor="#e2e3e5"];
+    PRODUCTS_SHELVES [label="{PRODUCTS_SHELVES|Shelf_ID : INT (PK, FK)\lProduct_ID : TEXT (PK, FK)\lQuantity : INT\l}", style=filled, fillcolor="#fff3cd"];
+    PRODUCT_TAGS [label="{PRODUCT_TAGS|Product_ID : TEXT (PK, FK)\lTag : TEXT (PK)\l}", style=filled, fillcolor="#fff3cd"];
+    PRODUCT_PROJECTS [label="{PRODUCT_PROJECTS|Product_ID : TEXT (PK, FK)\lProject : TEXT (PK)\l}", style=filled, fillcolor="#fff3cd"];
+    TRANSACTIONS [label="{TRANSACTIONS|ID : INT (PK)\lProduct_ID : TEXT (FK)\lProject_Name : TEXT (FK)\lShelf_ID : TEXT (FK)\lTime : DATETIME\lQuantity_Added : INT\lQuantity_Removed : INT\lOperator_ID : INT (FK)\l}", style=filled, fillcolor="#d1e7dd", penwidth=2];
+    LOGS [label="{LOGS|ID : INT (PK)\lTimestamp : DATETIME\lTransaction_Type : TEXT\lTransaction_ID : TEXT\lLevel : TEXT\lMessage : TEXT\l}", style=filled, fillcolor="#d4edda"];
+
+    // Relationships: arrows from main tables to secondary tables, labeled
+    PRODUCTS -> PRODUCTS_SHELVES [label="Product_ID"];
+    PRODUCTS -> PRODUCT_TAGS [label="Product_ID"];
+    PRODUCTS -> PRODUCT_PROJECTS [label="Product_ID"];
+    PRODUCTS -> TRANSACTIONS [label="Product_ID"];
+    OPERATORS -> TRANSACTIONS [label="Operator_ID"];
+    SHELVES -> PRODUCTS_SHELVES [label="Shelf_ID"];
+    SHELVES -> TRANSACTIONS [label="Shelf_ID"];
+    PRODUCT_PROJECTS -> TRANSACTIONS [label="Project_Name"];
+
+    // LOGS references TRANSACTIONS
+    TRANSACTIONS -> LOGS [label="Transaction_ID", style=dashed, color="#6c757d"];
+}

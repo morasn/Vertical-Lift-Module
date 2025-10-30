@@ -1,0 +1,93 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends "layout.html" %}
+{% block title %}Project{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold primary-text mb-4">Project {{ project_id }}</h2>
+    <table class="w-full table-auto">
+        <thead>
+            <tr class="primary-bg text-white">
+                <th class="px-4 py-2">Product ID</th>
+                <th class="px-4 py-2">Name</th>
+                <th class="px-4 py-2">Description</th>
+                <th class="px-4 py-2">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+                <tr class="border-b">
+                    <td class="px-4 py-2"><a href="{{ url_for('product_page', product_id=product.ID) }}" class="primary-text hover:underline">{{ product.ID }}</a></td>
+                    <td class="px-4 py-2">{{ product.Name }}</td>
+                    <td class="px-4 py-2">{{ product.Description }}</td>
+                    <td class="px-4 py-2">
+                        <button onclick="dispenseProduct('{{ product.ID }}')" class="primary-bg text-white py-1 px-3 rounded hover:bg-blue-700">Dispense</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button onclick="dispenseProject('{{ project_id }}')" class="mt-4 primary-bg text-white py-2 px-4 rounded hover:bg-blue-700">Dispense All Products</button>
+</div>
+<script>
+    function dispenseProject(projectId) {
+        var productIds = [];
+        products.forEach(element => {
+            productIds.push(element.ID);
+        });
+        fetch(`/api/project_dispense/${projectId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productIds)
+        })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => alert('Error dispensing project: ' + error));
+    }
+    function dispenseProduct(productId) {
+        fetch(`/api/product_dispense/${productId}`)
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => alert('Error dispensing product: ' + error));
+    }
+</script>
+{% endblock %}

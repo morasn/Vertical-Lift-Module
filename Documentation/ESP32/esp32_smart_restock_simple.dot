@@ -1,0 +1,18 @@
+digraph ESP32SmartRestockProcess {
+    label="ESP32 Smart Restock Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+    Initiate [label=<<B>Operator initiates smart restock</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    ScanProduct [label=<<B>Scan product RFID</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    Query [label=<<B>Send product UID to server</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    ShelfMove [label=<<B>Correct shelf moves to operator</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Restock [label=<<B>Operator places product</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    Confirm [label=<<B>Show confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Initiate -> ScanProduct -> Query -> ShelfMove -> Restock -> Confirm -> End;
+}

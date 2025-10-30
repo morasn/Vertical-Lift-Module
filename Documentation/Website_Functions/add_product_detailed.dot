@@ -1,0 +1,20 @@
+digraph AddProductProcess {
+    label="Add Product Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+    Login [label=<<B>Operator logs in</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    AccessForm [label=<<B>Access 'Add Product' page</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    EnterDetails [label=<<B>Enter product details, tags, projects</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    UploadImages [label=<<B>Upload product images</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    Validate [label=<<B>System validates input</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    Backend [label=<<B>Backend adds product to database</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Update [label=<<B>Update product list</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Confirm [label=<<B>Show confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Login -> AccessForm -> EnterDetails -> UploadImages -> Validate -> Backend -> Update -> Confirm -> End;
+}

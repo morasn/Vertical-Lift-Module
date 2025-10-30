@@ -1,0 +1,27 @@
+digraph AddProductProcessSimple {digraph AddProductSimple {
+
+    label="Add Product Process";    rankdir=TB;
+
+    labelloc="t";    node [shape=box, fontname="Times New Roman"];
+
+    fontsize=20;    Start [label="Operator accesses 'Add Product'"];
+
+    rankdir=TB;    EnterDetails [label="Enter product details"];
+
+    node [fontname="Times New Roman", fontweight=bold];    Submit [label="Submit form"];
+
+    Backend [label="Backend adds product"];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];    End [label="Confirmation shown"];
+
+    AccessForm [label=<<B>Operator accesses 'Add Product'</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+
+    EnterDetails [label=<<B>Enter product details</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];    Start -> EnterDetails -> Submit -> Backend -> End;
+
+    Submit [label=<<B>Submit form</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];}
+    Backend [label=<<B>Backend adds product</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Confirm [label=<<B>Confirmation shown</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> AccessForm -> EnterDetails -> Submit -> Backend -> Confirm -> End;
+}

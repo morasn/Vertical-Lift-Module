@@ -1,0 +1,68 @@
+digraph ProductClusteringSimple {
+    label="Product Clustering & AI Verification";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontsize=12];
+
+    // Stage 1: Prepare Data
+    subgraph cluster_0 {
+        label = "Stage 1: Prepare Data";
+        style=filled; color="#e6f7ff";
+    LoadProducts [label="Load product records and metadata\nfrom the database" , shape=note, style=filled, fillcolor="#eaf6ff"];
+    LoadProjects [label="Load existing product→project mappings\nand labels from the database" , shape=note, style=filled, fillcolor="#eaf6ff"];
+    Merge [label="Merge product data with project assignments;\nselect products with no project (to cluster)" , shape=rectangle, style=filled, fillcolor="#d9f0ff"];
+    }
+
+    // Stage 2: Sessions & Co-occurrence
+    subgraph cluster_1 {
+        label = "Stage 2: Sessions & Co-occurrence";
+        style=filled; color="#fff9e5";
+    BuildTx [label="Extract historical product movement events\ninto row-based transactions" , shape=rectangle, style=filled, fillcolor="#fffbe6"];
+    Sessionize [label="Group transactions into customer/session windows\n(e.g. 5-minute sessions)" , shape=rectangle, style=filled, fillcolor="#fffbe6"];
+    CoOccur [label="Build a normalized co-occurrence matrix\n(showing how often products appear together)" , shape=rectangle, style=filled, fillcolor="#fffbe6"];
+    }
+
+    // Stage 3: Clustering
+    subgraph cluster_2 {
+        label = "Stage 3: Clustering & Tuning";
+        style=filled; color="#ffe5b4";
+    Tune [label="Reduce dimensionality and search clustering\nhyperparameters to maximize silhouette score" , shape=rectangle, style=filled, fillcolor="#fff3e0"];
+    Assign [label="Assign each unprojected product to a cluster\n(produce product → cluster mapping)" , shape=rectangle, style=filled, fillcolor="#fff3e0"];
+    }
+
+    // Stage 4: AI Verify
+    subgraph cluster_3 {
+        label = "Stage 4: AI Verification (optional)";
+        style=filled; color="#e6f7ff";
+    PrepPrompt [label="Create textual summaries for each cluster\n(product names, sample members, short descriptions)" , shape=rectangle, style=filled, fillcolor="#eaf6ff"];
+    CallAI [label="Send summaries to an AI model for verification\nand category/action recommendations" , shape=rectangle, style=filled, fillcolor="#eaf6ff"];
+    Parse [label="Extract category, summary, and suggested action\nfrom the AI response" , shape=rectangle, style=filled, fillcolor="#eaf6ff"];
+    SplitCheck [label="Does the AI recommend splitting this cluster?" , shape=diamond, style=filled, fillcolor="#fff3e0"];
+    ReclusterOrFlag [label="Attempt finer clustering for splits\nor mark items for manual splitting" , shape=rectangle, style=filled, fillcolor="#fff3e0"];
+    }
+
+    // Stage 5: Write-back
+    subgraph cluster_4 {
+        label = "Stage 5: Write-back";
+        style=filled; color="#e6fff0";
+    AssignCats [label="Write final category/cluster labels back\nto product records (or products_project)" , shape=rectangle, style=filled, fillcolor="#f2fff4"];
+    Return [label="Return/save updated product→category mapping\n(and finish the workflow)" , shape=ellipse, style=filled, fillcolor="#e6ffe6"];
+    }
+
+    // Main flow
+    Start -> LoadProducts;
+    Start -> LoadProjects;
+    LoadProducts -> Merge;
+    LoadProjects -> Merge;
+    Merge -> BuildTx -> Sessionize -> CoOccur -> Tune -> Assign;
+    Assign -> PrepPrompt;
+    PrepPrompt -> CallAI -> Parse -> SplitCheck;
+    SplitCheck -> ReclusterOrFlag [label="Yes"];
+    SplitCheck -> AssignCats [label="No"];
+    ReclusterOrFlag -> AssignCats;
+    AssignCats -> Return;
+
+    // start
+    Start [label=<<B>Start</B>> , shape=ellipse, style=filled, fillcolor="#cce5ff"];
+}

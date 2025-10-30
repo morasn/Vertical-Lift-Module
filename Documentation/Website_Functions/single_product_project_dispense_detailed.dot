@@ -1,0 +1,38 @@
+digraph SingleProductProjectDispenseProcessDetailed {digraph SingleProductProjectDispenseDetailed {
+
+    label="Single Product Project Dispense Process";    rankdir=TB;
+
+    labelloc="t";    node [shape=box, fontname="Times New Roman"];
+
+    fontsize=20;    Start [label="Operator logs in"];
+
+    rankdir=TB;    SelectProject [label="Select project"];
+
+    node [fontname="Times New Roman", fontweight=bold];    SelectProduct [label="Select single product"];
+
+    Dispense [label="Click 'Dispense'"];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];    Auth [label="System verifies operator"];
+
+    Login [label=<<B>Operator logs in</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];    Backend [label="Backend logs transaction"];
+
+    SelectProject [label=<<B>Select project</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];    WebSocket [label="Send dispense command via WebSocket"];
+
+    SelectProduct [label=<<B>Select single product</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];    VLM [label="VLM dispenses product"];
+
+    Dispense [label=<<B>Click 'Dispense'</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];    Update [label="Update inventory"];
+
+    Auth [label=<<B>System verifies operator</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];    Confirm [label="Show confirmation"];
+
+    Backend [label=<<B>Backend logs transaction</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];    End [label="End"];
+
+    WebSocket [label=<<B>Send dispense command via WebSocket</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+
+    VLM [label=<<B>VLM dispenses product</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];    Start -> SelectProject -> SelectProduct -> Dispense -> Auth -> Backend -> WebSocket -> VLM -> Update -> Confirm -> End;
+
+    Update [label=<<B>Update inventory</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];}
+    Confirm [label=<<B>Show confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Login -> SelectProject -> SelectProduct -> Dispense -> Auth -> Backend -> WebSocket -> VLM -> Update -> Confirm -> End;
+}

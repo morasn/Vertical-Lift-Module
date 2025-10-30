@@ -1,0 +1,29 @@
+digraph SingleProductProjectDispenseProcess {digraph SingleProductProjectDispenseSimple {
+
+    label="Single Product Project Dispense Process";    rankdir=TB;
+
+    labelloc="t";    node [shape=box, fontname="Times New Roman"];
+
+    fontsize=20;    Start [label="Operator selects project"];
+
+    rankdir=TB;    SelectProduct [label="Select single product"];
+
+    node [fontname="Times New Roman", fontweight=bold];    Dispense [label="Click 'Dispense'"];
+
+    Backend [label="Backend processes request"];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];    VLM [label="VLM dispenses product"];
+
+    SelectProject [label=<<B>Operator selects project</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];    End [label="Confirmation shown"];
+
+    SelectProduct [label=<<B>Select single product</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+
+    Dispense [label=<<B>Click 'Dispense'</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];    Start -> SelectProduct -> Dispense -> Backend -> VLM -> End;
+
+    Backend [label=<<B>Backend processes request</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];}
+    VLM [label=<<B>VLM dispenses product</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Confirm [label=<<B>Confirmation shown</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> SelectProject -> SelectProduct -> Dispense -> Backend -> VLM -> Confirm -> End;
+}

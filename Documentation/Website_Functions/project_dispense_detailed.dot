@@ -1,0 +1,25 @@
+digraph ProjectDispenseDetailed {
+    label="Project Dispense Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    // Nodes
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+    Login [label=<<B>Operator logs in</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Auth [label=<<B>System verifies operator</B>>, shape=diamond, style=filled, fillcolor="#d6eaff"];
+    Search [label=<<B>Search for projects</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    SelectProject [label=<<B>Select project</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    SelectProducts [label=<<B>Select products for project</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];
+    Dispense [label=<<B>Click 'Project Dispense'</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Backend [label=<<B>Backend logs transaction</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    WebSocket [label=<<B>Send operation command via WebSocket</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    VLM [label=<<B>VLM executes retrieval using dual cycle</B>>, shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    Update [label=<<B>Update inventory</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Confirm [label=<<B>Show confirmation</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    // Flow
+    Start -> Login -> Auth -> Search -> SelectProject -> SelectProducts -> Dispense -> Backend -> WebSocket -> VLM -> Update -> Confirm -> End;
+}

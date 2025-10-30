@@ -1,0 +1,25 @@
+digraph ProductSearchProcess {digraph ProductSearchSimple {
+
+    label="Product Search Process";    rankdir=TB;
+
+    labelloc="t";    node [shape=box, fontname="Times New Roman"];
+
+    fontsize=20;    Start [label="Operator accesses website"];
+
+    rankdir=TB;    Search [label="Enter product search query"];
+
+    node [fontname="Times New Roman", fontweight=bold];    Results [label="View search results"];
+
+    End [label="Select product or exit"];
+
+    Start [label=<<B>Start</B>>, shape=ellipse, style=filled, fillcolor="#cce5ff", fontsize=16];
+
+    Access [label=<<B>Operator accesses website</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];    Start -> Search -> Results -> End;
+
+    Search [label=<<B>Enter product search query</B>>, shape=parallelogram, style=filled, fillcolor="#fff9e5"];}
+    Results [label=<<B>View search results</B>>, shape=rectangle, style=filled, fillcolor="#fff9e5"];
+    Select [label=<<B>Select product or exit</B>>, shape=parallelogram, style=filled, fillcolor="#d4edda"];
+    End [label=<<B>End</B>>, shape=ellipse, style=filled, fillcolor="#f8d7da", fontsize=16];
+
+    Start -> Access -> Search -> Results -> Select -> End;
+}

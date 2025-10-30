@@ -1,0 +1,74 @@
+digraph WebsiteRestockProcessDetailed {
+    label="Product Restocking Process";
+    labelloc="t";
+    fontsize=20;
+    rankdir=TB;
+    node [fontname="Times New Roman", fontweight=bold];
+
+    // Stage 1: Initialization
+    subgraph cluster_0 {
+        label = "Stage 1: Initialization";
+        style=filled;
+        color="#cce5ff";
+        InitDesc [label="Operator logs in and navigates to restock page.", shape=note, style=filled, fillcolor="#e3f2fd", fontname="Times New Roman"];
+    Start [label=<<B>Start</B>> , shape=ellipse, style=filled, fillcolor="#cce5ff"];
+    Login [label=<<B>Operator logs in</B>> , shape=rectangle, style=filled, fillcolor="#cce5ff"];
+    NavigateRestock [label=<<B>Navigate to Restock Page</B>> , shape=rectangle, style=filled, fillcolor="#cce5ff"];
+    }
+
+    // Stage 2: Product & Shelf Selection
+    subgraph cluster_1 {
+        label = "Stage 2: Product & Shelf Selection";
+        style=filled;
+        color="#fff9e5";
+
+        /* Selection description cluster (notes) */
+
+
+        SelectProduct [label=<<B>Select Product(s)</B>> , shape=parallelogram, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        CheckStored [label=<<B>Check if Product is Stored</B>> , shape=diamond, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        AllocateShelf [label=<<B>Allocate Shelf/Position</B>> , shape=rectangle, style=filled, fillcolor="#ffe5b4", fontname="Times New Roman", fontweight=bold];
+        ShelfSelection [label=<<B>System evaluates shelves</B><BR/><FONT POINT-SIZE='10'>Space, weight, racks</FONT>> , shape=rectangle, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        ProjectCheck [label=<<B>Associated Project shelves available?</B>> , shape=diamond, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        PickProjectShelf [label=<<B>Pick shelf with most space (project)</B>> , shape=parallelogram, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        FamilyCheck [label=<<B>Associated Family shelves available?</B>> , shape=diamond, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        PickFamilyShelf [label=<<B>Pick shelf with most space (family)</B>> , shape=parallelogram, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+        PickEmptiestShelf [label=<<B>Pick shelf with most space (all)</B>> , shape=parallelogram, style=filled, fillcolor="#fff9e5", fontname="Times New Roman", fontweight=bold];
+
+    }
+
+    // Stage 3: Restock Operation
+    subgraph cluster_2 {
+        label = "Stage 3: Restock Operation";
+        style=filled;
+        color="#ffe5b4";
+        RestockDesc [label="Operator enters quantity and confirms restock. System updates DB and logs transaction.", shape=note, style=filled, fillcolor="#fff3e0", fontname="Times New Roman"];
+    EnterQuantity [label=<<B>Enter Quantity</B>> , shape=parallelogram, style=filled, fillcolor="#ffe5b4"];
+    ConfirmRestock [label=<<B>Confirm Restock</B>> , shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    UpdateDB [label=<<B>Update Database</B>> , shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    LogTransaction [label=<<B>Log Transaction</B>> , shape=rectangle, style=filled, fillcolor="#ffe5b4"];
+    End [label=<<B>End</B>> , shape=ellipse, style=filled, fillcolor="#f8d7da"];
+    }
+
+    // Main flow
+    Start -> Login;
+    Login -> NavigateRestock;
+    NavigateRestock -> SelectProduct;
+    SelectProduct -> CheckStored;
+    
+    CheckStored -> AllocateShelf;
+    AllocateShelf -> ShelfSelection;
+    ShelfSelection -> ProjectCheck;
+    ProjectCheck -> PickProjectShelf;
+    ProjectCheck -> FamilyCheck;
+    FamilyCheck -> PickFamilyShelf;
+    FamilyCheck -> PickEmptiestShelf;
+    PickProjectShelf -> EnterQuantity;
+    PickFamilyShelf -> EnterQuantity;
+    PickEmptiestShelf -> EnterQuantity -> ConfirmRestock -> UpdateDB -> LogTransaction-> End;
+    
+    // If shelf selection fails at any point, NoShelf is reached
+
+    // Display options for user feedback
+    
+}

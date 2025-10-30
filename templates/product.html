@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+{% block title %}Product - {{ product.Name }}{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md ">
+    <!-- Family Items and Action Button -->
+    <div class="mt-6 text-center">
+        <div class="mb-4">
+            <label for="family_item" class="block text-gray-700 text-center">Family Items</label>
+            <select id="family_item" onchange="window.location.href=this.value" class="w-full max-w-xs mx-auto px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
+                {% for family_product in family %}
+                    <option value="{{ url_for('product_page', product_id=family_product[0]) }}" {{ 'selected' if family_product[0] == product.ID }}>{{ family_product[1] }}</option>
+                {% endfor %}
+
+            </select>
+        </div>
+        <button onclick="ProductInteract('{{ product.ID }}', 'dispense')" class="primary-bg text-white py-2 px-6 rounded hover:bg-blue-700">Dispense Product</button>
+        <button onclick="ProductInteract('{{ product.ID }}', 'restock')" class="primary-bg text-white py-2 px-6 rounded hover:bg-blue-700">Restock Product</button>
+        
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="mt-6">
+        <ul class="flex border-b">
+            <li class="-mb-px mr-1">
+                <a class="bg-white inline-block border-l border-t border-r rounded-t py-2 px-4 text-blue-700 font-semibold" onclick="showDetailsTab()">Details</a>
+            </li>
+            {% if session['Access_Level'] > 1 %}
+            <li class="mr-1">
+                <a class="bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold" onclick="showInventoryTab()">Inventory</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <!-- Details Tab Content -->
+    <div id="details-tab">
+        <!-- Product Image Carousel -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="carousel relative">
+                {% if images %}
+                    {% set image_count = 0 %}
+                    {% for image in images %}
+                        <img src="{{ url_for('static', filename='DB/Product_Pics/' + product.ID + '/' + image) }}" alt="Product Image {{ loop.index0 }}" class="h-85 object-cover rounded justify-center carousel-item {{ 'block' if loop.first else 'hidden' }}">
+                        {% set image_count = image_count + 1 %}
+                    {% endfor %}
+                    <button class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded" onclick="changeSlide(-1)">Prev</button>
+                    <button class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 text-white p-2 rounded" onclick="changeSlide(1)">Next</button>
+                {% else %}
+                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center rounded">
+                        <p class="text-gray-500">No images available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Content and Sidebar Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Product Details (Left Column) -->
+            <div class="lg:col-span-2">
+                <h2 class="text-2xl font-bold primary-text mb-4 text-center">{{ product.Name }}</h2>
+                <div class="space-y-4">
+                    
+                    <p><strong class="primary-text">Weight:</strong> {{ product.Weight }} grams</p>
+                    <p><strong class="primary-text">Reorder Point:</strong> {{ product.ROP }}</p>
+                    <p><strong class="primary-text">On-Hand Quantity:</strong> {{ product.OH }}</p>
+                    <p class="text-gray-700">{{ product.Description }}</p>
+
+                </div>
+            </div>
+
+            <!-- Projects Sidebar (Right Column) -->
+            <div class="lg:col-span-1">
+                <h3 class="text-xl font-semibold primary-text mb-4 text-center">Projects Using This Product</h3>
+                {% if projects %}
+                    <div class="grid grid-cols-1 gap-4">
+                        {% for project in projects %}
+                            <div class="bg-gray-100 p-4 rounded-lg shadow-sm hover:shadow-md flex flex-col items-center justify-center min-h-[100px]">
+                                <a href="{{ url_for('project_page', project=project) }}" class="text-lg font-medium primary-text hover:underline text-center">{{ project }}</a>
+                                <p class="mt-2 text-sm text-gray-600 text-center">Associated with this product</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-700 text-center">No projects associated with this product.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Tab Content (Visible if Access Level > 1) -->
+    {% if session['Access_Level'] > 1 %}
+    <div id="inventory-tab" class="hidden">
+        <h3 class="text-xl font-semibold primary-text mb-4 text-center">Inventory Over Time</h3>
+        <div id="inventory-content">
+            <canvas id="inventoryChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.carousel-item');
+    function changeSlide(direction) {
+        if (slides.length === 0) return;
+        slides[currentSlide].classList.add('hidden');
+        currentSlide = (currentSlide + direction + slides.length) % slides.length;
+        slides[currentSlide].classList.remove('hidden');
+    }
+    function ProductInteract(productId, operation) {
+        
+        fetch(`/api/product_interaction/${productId}/${operation}`)
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => alert('Error dispensing product: ' + error));
+    
+    }
+
+    function showDetailsTab() {
+        document.getElementById('details-tab').classList.remove('hidden');
+        document.getElementById('inventory-tab').classList.add('hidden');
+    }
+    function showInventoryTab() {
+        document.getElementById('details-tab').classList.add('hidden');
+        document.getElementById('inventory-tab').classList.remove('hidden');
+        fetch(`/api/product_inventory/{{ product.ID }}`)
+            .then(response => response.json())
+            .then(data => {
+                const contentDiv = document.getElementById('inventory-content');
+                if (data.dates && data.dates.length > 0) {
+                    contentDiv.innerHTML = '<canvas id="inventoryChart" width="400" height="200"></canvas>';
+                    const ctx = document.getElementById('inventoryChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: [{
+                                label: 'Inventory',
+                                data: data.quantities,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Date'
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Quantity'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    contentDiv.innerHTML = '<p class="text-gray-500 text-center">There are no recent transactions for this product.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching inventory data:', error);
+                document.getElementById('inventory-content').innerHTML = '<p class="text-red-500 text-center">Error loading inventory data.</p>';
+            });
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
