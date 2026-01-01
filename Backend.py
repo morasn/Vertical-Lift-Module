@@ -42,6 +42,14 @@ def Norm_Product_Operation(ID, Shelf_Property, Product_ID, QTY, Operator_ID, Sou
     )
 
     db.Products_Shelves_Update_db(Shelf_ID, Product_ID, QTY + Current_Qty)
+    
+    db.log_event(
+        "INFO",
+        f"Product operation logged: ID={ID}, Product_ID={Product_ID}, Shelf_ID={Shelf_ID}, QTY_Added={QTY_Added}, QTY_Removed={QTY_Removed}, Operator_ID={Operator_ID}, Source={Source}, Project_Name={project}",
+        "Server",
+        transaction_type="PRODUCT_OPERATION",
+        transaction_id=ID,
+    )
 
 def VLM_Product_Operation(Shelf_Pos, Product_ID, QTY, Operator_ID, project=None):
     """Logs a product operation (dispense or restock) and updates the database.
@@ -69,6 +77,13 @@ def VLM_Product_Operation(Shelf_Pos, Product_ID, QTY, Operator_ID, project=None)
     )
 
     db.Products_Shelves_Update_db(Shelf_ID, Product_ID, QTY + Current_Qty)
+    db.log_event(
+        "INFO",
+        f"VLM Product operation logged: ID={ID}, Product_ID={Product_ID}, Shelf_ID={Shelf_ID}, QTY_Added={QTY_Added}, QTY_Removed={QTY_Removed}, Operator_ID={Operator_ID}, Project_Name={project}",
+        "Server",
+        transaction_type="PRODUCT_OPERATION_VLM",
+        transaction_id=ID,
+    )
 ## Operator
 def LogIn_Check(Username, Passw):
     """Checks if the provided username and password match an operator in the database.
@@ -81,14 +96,14 @@ def LogIn_Check(Username, Passw):
     try:
         [Name, Salted_Passw, Salt, AccessLevel] = db.Operator_Login(Username)
     except:
-        return "Invalid Username!"
+        return "Invalid Username!", False, False
 
     Passw = db.Passw_Salter(Passw, Salt)
 
     if Passw == Salted_Passw:
         return True, Name, int(AccessLevel)
     else:
-        return False
+        return False, False, False
 
 
 def First_Operator_Check():
@@ -142,6 +157,13 @@ def Add_Product(
 
     # Saving Photos
     Save_Uploaded_Photo(Thumbnail, Photos, ID)
+    db.log_event(
+        "INFO",
+        f"Product added: ID={ID}, Name={Name}, Family_Name={Family_Name}, Family_Item={Family_Item}",
+        "Server",
+        transaction_type="PRODUCT_ADD",
+        transaction_id=ID,
+    )
     return True
 
 
@@ -245,7 +267,7 @@ def Products_Project_Search(project):
     return Products
 
 
-def Website_Transaction(product_ids, operation, operator_id, QTY=1, project=None):
+def Website_Transaction(product_ids, operation, operator_id, QTY=1, project=None, Transaction_id=None):
     """
     Dispenses or restocks a product based on the operation type, and adds a transaction record in DB.
     Args:
@@ -289,6 +311,7 @@ def Website_Transaction(product_ids, operation, operator_id, QTY=1, project=None
             db.log_event(
                 "INFO",
                 f"Website {operation} operation successful for products {product_ids}",
+                "Server",
                 transaction_type="WEBSITE_TRANSACTION",
                 transaction_id=Transaction_id,
             )
@@ -297,6 +320,7 @@ def Website_Transaction(product_ids, operation, operator_id, QTY=1, project=None
             db.log_event(
                 "ERROR",
                 f"Website {operation} operation failed for products {product_ids}",
+                "Server",
                 transaction_type="WEBSITE_TRANSACTION",
                 transaction_id=Transaction_id,
             )
@@ -328,6 +352,22 @@ def Get_Product_Inventory(product_id):
         }
     except Exception as e:
         return str(e)
+
+
+def Get_Logs(level=None, source=None, transaction_type=None, transaction_id=None, q=None, start=None, end=None, limit=50, offset=0):
+    """Wrapper to DB.Get_Logs"""
+    try:
+        logs, total = db.Get_Logs(level=level, source=source, transaction_type=transaction_type, transaction_id=transaction_id, q=q, start=start, end=end, limit=limit, offset=offset)
+        return logs, total
+    except Exception as e:
+        return [], 0
+
+
+def Get_Log_Selectors():
+    try:
+        return db.Get_Log_Selectors()
+    except Exception as e:
+        return {'levels': [], 'sources': [], 'transaction_types': []}
 
 
 # Other Backend Functions

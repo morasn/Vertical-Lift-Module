@@ -205,7 +205,6 @@ def Get_Product_Inventory_Records(product_id: str):
         return records
 
 
-
 ### Transactions section
 def Add_Transaction_db(ID, Product_ID, Shelf_ID, Time, Quantity_Added, Quantity_Removed, Operator_ID, Project_Name):
     """
@@ -240,7 +239,9 @@ def Transaction_ID_Generator():
         str: A new unique transaction ID.
     """
     import uuid
-    return uuid.uuid4().int
+    id = str(uuid.uuid4().hex)[:8]
+
+    return int(id, 16)
 
 def Products_Shelves_Update_db(Shelf_ID, Product_ID, Quantity):
     """
@@ -826,10 +827,13 @@ def Operator_ID_Query(ID):
                 "SELECT Name, Username FROM OPERATORS WHERE ID = ?", (ID,)
             )
             result = cursor.fetchone()
+
             if result:
                 return result[0], result[1]
             else:
-                raise Exception("Operator ID not found")
+                return None
+                # raise Exception("Operator ID not found")
+                
     except Exception as e:
         return str(e)
 
@@ -858,13 +862,160 @@ def Passw_Salter(data: str, salt: str):
     new = bcrypt.hashpw(data.encode("utf-8"), salt.encode("utf-8")).decode("utf-8")
     return new
 
+### VLM Configuration Logging
+def VLM_Update_Configuration(normal_speed,
+                        approach_speed,
+                        steps_per_floor,
+                        stop_pulse,
+                        for_pulse,
+                        back_pulse,
+                        collect_time,
+                        return_time, hall_N_thresh, hall_S_thresh):
+    """
+    Updates the VLM configuration parameters in the VLM_CONFIG table.
+    Args:
+        normal_speed (int): Normal speed.
+        approach_speed (int): Approach speed.
+        stop_pulse (int): Stop pulse duration.
+        for_pulse (int): Forward pulse duration.
+        back_pulse (int): Backward pulse duration.
+        collect_time (int): Collect time duration.
+        return_time (int): Return time duration.
+    Returns:
+        bool: True if the configuration was updated successfully, otherwise an error message.
+    """ 
+    with DBConnection() as db:
+        cursor = db.cursor()
+        try:
+            cursor.execute(
+                """INSERT INTO  VLM_CONFIG (Normal_Speed, Approach_Speed, Steps_Per_Floor, Stop_Pulse, For_Pulse, Back_Pulse, Collect_Time, Return_Time, hall_N_thresh, hall_S_thresh, Last_Updated)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                   """,
+                (normal_speed,
+                 approach_speed,
+                    steps_per_floor,
+                 stop_pulse,
+                 for_pulse,
+                 back_pulse,
+                 collect_time,
+                 return_time,
+                 hall_N_thresh,
+                 hall_S_thresh),
+            )
+            db.commit()
+        except Exception as e:
+            return e
+
+
+def VLM_Get_Configuration():
+    """
+    Retrieve the current VLM configuration as a dictionary.
+    Returns:
+        dict: {'normal_delay', 'approaching_delay', 'stop_pulse', 'for_pulse', 'back_pulse', 'collect_time', 'return_time'}
+        or None if not found / on error.
+    """
+    try:
+        with DBConnection() as db:
+            cursor = db.cursor()
+            cursor.execute('SELECT Normal_Speed, Approach_Speed, Steps_Per_Floor, Stop_Pulse, For_Pulse, Back_Pulse, Collect_Time, Return_Time, hall_N_thresh, hall_S_thresh, Last_Updated FROM VLM_CONFIG LIMIT 1')
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                'Normal_Speed': row[0],
+                'Approach_Speed': row[1],
+                'Steps_Per_Floor': row[2],
+                'Stop_Pulse': row[3],
+                'For_Pulse': row[4],
+                'Back_Pulse': row[5],
+                'Collect_Time': row[6],
+                'Return_Time': row[7],
+                'hall_N_thresh': row[8],
+                'hall_S_thresh': row[9],
+                'Last_Updated': row[10]
+            }
+    except Exception as e:
+        print(f'VLM_Get_Configuration failed: {e}')
+        return None
+
+
+def Get_Logs(level=None, source=None, transaction_type=None, transaction_id=None, q=None, start=None, end=None, limit=50, offset=0):
+    """Query logs with optional filters and pagination.
+    Returns: (rows, total_count)
+    """
+    with DBConnection() as db:
+        cursor = db.cursor()
+        where = []
+        params = []
+        if level:
+            where.append("Level = ?")
+            params.append(level)
+        if source:
+            where.append("Source = ?")
+            params.append(source)
+        if transaction_type:
+            where.append("Transaction_Type = ?")
+            params.append(transaction_type)
+        if transaction_id:
+            where.append("Transaction_ID = ?")
+            params.append(transaction_id)
+        if q:
+            where.append("Message LIKE ?")
+            params.append(f"%{q}%")
+        if start:
+            where.append("Timestamp >= ?")
+            params.append(start)
+        if end:
+            where.append("Timestamp <= ?")
+            params.append(end)
+
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+        # total count
+        count_q = f"SELECT COUNT(*) FROM LOGS {where_sql}"
+        cursor.execute(count_q, params)
+        total = cursor.fetchone()[0]
+
+        q_str = f"SELECT ID, Timestamp, Transaction_Type, Transaction_ID, Level, Source, Message FROM LOGS {where_sql} ORDER BY Timestamp DESC LIMIT ? OFFSET ?"
+        cursor.execute(q_str, params + [limit, offset])
+        rows = cursor.fetchall()
+        # convert to list of dicts
+        logs = []
+        for r in rows:
+            logs.append({
+                'id': r[0],
+                'timestamp': r[1],
+                'transaction_type': r[2],
+                'transaction_id': r[3],
+                'level': r[4],
+                'source': r[5],
+                'message': r[6]
+            })
+        return logs, total
+
+
+def Get_Log_Selectors():
+    """Return distinct values for Level, Source, Transaction_Type to populate filters."""
+    with DBConnection() as db:
+        cursor = db.cursor()
+        cursor.execute("SELECT DISTINCT Level FROM LOGS")
+        levels = [r[0] for r in cursor.fetchall() if r[0]]
+        cursor.execute("SELECT DISTINCT Source FROM LOGS")
+        sources = [r[0] for r in cursor.fetchall() if r[0]]
+        cursor.execute("SELECT DISTINCT Transaction_Type FROM LOGS")
+        types = [r[0] for r in cursor.fetchall() if r[0]]
+        return {'levels': levels, 'sources': sources, 'transaction_types': types}
+
+
+
 ###### ADDING LOGGING FUNCTIONALITY
-def log_event(level, message, transaction_type=None, transaction_id=None):
+def log_event(level, message, source ,transaction_type=None, transaction_id=None):
     """
     Logs an event to the LOGS table.
     Args:
         level (str): Log level (e.g., 'INFO', 'ERROR', 'WARNING').
         message (str): Log message.
+        source (str): Source of the log event (ESP32 or Server).
         transaction_type (str, optional): Type of transaction (e.g., 'ADD', 'REMOVE').
         transaction_id (str, optional): ID of the related transaction.
     """
@@ -872,10 +1023,26 @@ def log_event(level, message, transaction_type=None, transaction_id=None):
         cursor = db.cursor()
         try:
             cursor.execute(
-                "INSERT INTO LOGS (Level, Message, Transaction_Type, Transaction_ID) VALUES (?, ?, ?, ?)",
-                (level, message, transaction_type, transaction_id)
+                "INSERT INTO LOGS (Level, Message, Source, Transaction_Type, Transaction_ID) VALUES (?, ?, ?, ?, ?)",
+                (level, message, source, transaction_type, transaction_id)
             )
             db.commit()
         except Exception as e:
             print(f"Logging failed: {e}")  # Fallback if logging itself fails
+
+### Forecast Projects
+def Forecast_Project_Get():
+    """
+    Fetches all forecast projects from the FORECASTS table.
+    Returns a list of project names.
+    """
+    try:
+        with DBConnection() as db:
+            cursor = db.cursor()
+            cursor.execute("SELECT UNIQUE ID Product_ID, Project_Name, Shelf_ID, Time, Quantity_Removed FROM TRANSACTIONS")
+            projects = [row[0] for row in cursor.fetchall()]
+            return projects if projects else []
+    except Exception as e:
+        print(str(e))
+
 

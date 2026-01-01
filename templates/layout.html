@@ -44,7 +44,7 @@
                 <li><a href="{{ url_for('index') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Home</a></li>
                 {% if session.Access_Level is defined %}
                     {% if session.Access_Level > 1 %}
-                        <!-- <li><a href="{{ url_for('view_shelves') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">View Shelves</a></li> -->
+                        <li><a href="{{ url_for('machine_logs') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Machine Logs</a></li>
                     {% endif %}
                     {% if session.Access_Level > 2 %}
                         <!-- <li><a href="{{ url_for('manage_users') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Manage Users</a></li> -->
@@ -52,6 +52,7 @@
                     {% endif %}
                     {% if session.Access_Level > 3 %}
                         <li><a href="{{ url_for('add_shelf') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Add Shelf to DB</a></li>
+                        <li><a href="{{ url_for('config_vlm') }}" class="nav-link px-4 py-2 rounded primary-text hover:text-white hover:bg-blue-500">Configure VLM</a></li>
                     {% endif %}
 
                 {% endif %}

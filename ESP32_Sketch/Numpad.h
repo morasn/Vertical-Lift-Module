@@ -5,14 +5,22 @@
 #define ROW_NUM 4	 // four rows
 #define COLUMN_NUM 4 // four columns
 
-#include <Keypad.h>
+#include <I2CKeyPad.h>
 #include "RFID.h"
 #include "WebSocketHandler.h"
+#include <PCF8574.h>
+
+extern I2CKeyPad keypad;
 
 extern bool Authenticated;
-extern int AuthTrials;
-extern int VLMtranscationID;
+extern int8_t AuthTrials;
+extern int VLMtransactionID;
+extern bool AutoRestocked;
+extern PCF8574 pcf8574;
+extern I2CKeyPad keypad;
 
-void KeyPadInterpret();
+// I2CKeyPad& KeypadInit();
+void KeypadInit();
+void KeyPadInterpret(I2CKeyPad &keypad);
 
 #endif

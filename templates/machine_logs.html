@@ -1,0 +1,208 @@
+{% extends "layout.html" %}
+{% block title %}Machine Logs{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-3">Machine Logs</h2>
+
+  <div class="card mb-3 p-3 shadow-sm">
+    <div class="d-flex align-items-start justify-content-between mb-3">
+      <div class="me-2 w-100">
+        <div class="row g-2">
+          <div class="col-sm-6 col-md-2">
+            <label class="form-label small">Level</label>
+            <select id="filter_level" class="form-select form-select-sm"><option value="">All</option></select>
+          </div>
+          <div class="col-sm-6 col-md-2">
+            <label class="form-label small">Source</label>
+            <select id="filter_source" class="form-select form-select-sm"><option value="">All</option></select>
+          </div>
+          <div class="col-sm-12 col-md-3">
+            <label class="form-label small">Transaction Type</label>
+            <select id="filter_type" class="form-select form-select-sm"><option value="">All</option></select>
+          </div>
+          <div class="col-sm-6 col-md-2">
+            <label class="form-label small">Transaction ID</label>
+            <div class="input-group input-group-sm">
+              <input id="filter_tid" class="form-control" />
+              <button class="btn btn-outline-secondary" type="button" title="Clear" onclick="document.getElementById('filter_tid').value='';">✖</button>
+            </div>
+          </div>
+          <div class="col-sm-6 col-md-3">
+            <label class="form-label small">Search</label>
+            <input id="filter_q" class="form-control form-control-sm" placeholder="Search message" />
+          </div>
+        </div>
+        <div class="row g-2 mt-2">
+          <div class="col-sm-6 col-md-3">
+            <label class="form-label small">Start</label>
+            <input id="filter_start" type="datetime-local" class="form-control form-control-sm" />
+          </div>
+          <div class="col-sm-6 col-md-3">
+            <label class="form-label small">End</label>
+            <input id="filter_end" type="datetime-local" class="form-control form-control-sm" />
+          </div>
+          <div class="col-sm-6 col-md-2">
+            <label class="form-label small">Limit</label>
+            <input id="filter_limit" type="number" class="form-control form-control-sm" value="50" />
+          </div>
+          <div class="col-sm-6 col-md-4 d-flex align-items-end justify-content-end gap-2">
+            <button id="applyBtn" class="btn btn-primary btn-sm" onclick="loadLogs()">Apply</button>
+            <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Reset</button>
+            <button id="exportBtn" class="btn btn-outline-success btn-sm" onclick="exportCSV()" title="Export current view as CSV">Export CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="logs_table" class="table-responsive position-relative">
+    <div id="logs_loading" class="position-absolute top-50 start-50 translate-middle d-none">
+      <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+    </div>
+    <table class="table table-striped table-hover table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th style="width: 40px">#</th>
+          <th style="width: 180px">Time</th>
+          <th style="width: 90px">Level</th>
+          <th style="width: 120px">Source</th>
+          <th style="width: 120px">Type</th>
+          <th style="width: 160px">Transaction ID</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody id="logs_body"></tbody>
+    </table>
+  </div>
+
+  <nav>
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+</div>
+
+<script>
+async function loadSelectors(){
+  const res = await fetch('/api/log_selectors');
+  if (!res.ok) return;
+  const s = await res.json();
+  const lvl = document.getElementById('filter_level');
+  // clear existing (keep first 'All' option)
+  while (lvl.options.length > 1) lvl.remove(1);
+  s.levels.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.text=v; lvl.appendChild(opt); });
+
+  const src = document.getElementById('filter_source');
+  while (src.options.length > 1) src.remove(1);
+  s.sources.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.text=v; src.appendChild(opt); });
+
+  const tp = document.getElementById('filter_type');
+  while (tp.options.length > 1) tp.remove(1);
+  s.transaction_types.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.text=v; tp.appendChild(opt); });
+}
+
+async function loadLogs(page=0){
+  const applyBtn = document.getElementById('applyBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const loading = document.getElementById('logs_loading');
+  // show loading state
+  loading.classList.remove('d-none');
+  if (applyBtn) applyBtn.disabled = true;
+  if (exportBtn) exportBtn.disabled = true;
+  const limit = parseInt(document.getElementById('filter_limit').value || 50, 10);
+  const offset = page * limit;
+  const params = new URLSearchParams();
+  const level = document.getElementById('filter_level').value; if(level) params.set('level', level);
+  const source = document.getElementById('filter_source').value; if(source) params.set('source', source);
+  const transaction_type = document.getElementById('filter_type').value; if(transaction_type) params.set('transaction_type', transaction_type);
+  const transaction_id = document.getElementById('filter_tid').value; if(transaction_id) params.set('transaction_id', transaction_id);
+  const q = document.getElementById('filter_q').value; if(q) params.set('q', q);
+  const start = document.getElementById('filter_start').value; if(start) params.set('start', start);
+  const end = document.getElementById('filter_end').value; if(end) params.set('end', end);
+  params.set('limit', limit);
+  params.set('offset', offset);
+  const res = await fetch('/api/logs?'+params.toString());
+  const body = document.getElementById('logs_body');
+  body.innerHTML='';
+  if (!res.ok){ body.innerHTML='<tr><td colspan="7">Error loading logs</td></tr>'; loading.classList.add('d-none'); if (applyBtn) applyBtn.disabled=false; if (exportBtn) exportBtn.disabled=false; return; }
+  const j = await res.json();
+  window._lastLogs = j; // store for export
+  if (!j.logs || j.logs.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No logs found for selected filters</td></tr>';
+  } else {
+    j.logs.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      const idx = offset + i + 1;
+      const levelHtml = levelBadge(r.level);
+      const tidHtml = `<div class="d-flex gap-2 align-items-center"><code class="small text-monospace">${escapeHtml(r.transaction_id || '')}</code><button class="btn btn-sm btn-outline-secondary" onclick="copyTid('${escapeHtml(r.transaction_id || '')}', this)">Copy</button></div>`;
+      const msg = r.message || '';
+      const truncated = msg.length > 150 ? escapeHtml(msg.slice(0,150)) + '…' : escapeHtml(msg);
+      tr.innerHTML = `<td>${idx}</td><td>${escapeHtml(r.timestamp)}</td><td>${levelHtml}</td><td>${escapeHtml(r.source)}</td><td>${escapeHtml(r.transaction_type)}</td><td>${tidHtml}</td><td title="${escapeHtml(msg)}">${truncated}</td>`;
+      body.appendChild(tr);
+    });
+  }
+  // hide loading and re-enable
+  loading.classList.add('d-none');
+  if (applyBtn) applyBtn.disabled=false;
+  if (exportBtn) exportBtn.disabled=false;
+  // pagination
+  const total = j.total;
+  const pages = Math.ceil(total / limit);
+  const pag = document.getElementById('pagination');
+  pag.innerHTML='';
+  // Prev
+  const liPrev = document.createElement('li'); liPrev.className = 'page-item' + (page===0 ? ' disabled' : '');
+  const aPrev = document.createElement('a'); aPrev.className='page-link'; aPrev.href='#'; aPrev.textContent='Prev'; aPrev.onclick = (e)=>{ e.preventDefault(); if (page>0) loadLogs(page-1); };
+  liPrev.appendChild(aPrev); pag.appendChild(liPrev);
+  // pages
+  for (let p=0;p<pages;p++){
+    const li = document.createElement('li'); li.className='page-item'+(p===page?' active':'');
+    const a = document.createElement('a'); a.className='page-link'; a.href='#'; a.textContent=(p+1); a.onclick = (e)=>{ e.preventDefault(); loadLogs(p); };
+    li.appendChild(a); pag.appendChild(li);
+  }
+  // Next
+  const liNext = document.createElement('li'); liNext.className = 'page-item' + (page >= pages-1 ? ' disabled' : '');
+  const aNext = document.createElement('a'); aNext.className='page-link'; aNext.href='#'; aNext.textContent='Next'; aNext.onclick = (e)=>{ e.preventDefault(); if (page < pages-1) loadLogs(page+1); };
+  liNext.appendChild(aNext); pag.appendChild(liNext);
+}
+
+function resetFilters(){
+  ['filter_level','filter_source','filter_type','filter_tid','filter_q','filter_start','filter_end'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  loadLogs(0);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{ loadSelectors().then(()=>loadLogs(0)); });
+
+function levelBadge(level) {
+  if (!level) return '<span class="badge bg-secondary">UNKNOWN</span>';
+  const l = level.toString().toUpperCase();
+  if (l.includes('ERROR') || l==='ERROR') return `<span class="badge bg-danger">${escapeHtml(l)}</span>`;
+  if (l.includes('WARN') || l==='WARNING') return `<span class="badge bg-warning text-dark">${escapeHtml(l)}</span>`;
+  if (l.includes('INFO') || l==='INFO') return `<span class="badge bg-success">${escapeHtml(l)}</span>`;
+  return `<span class="badge bg-secondary">${escapeHtml(l)}</span>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function copyTid(tid, btn){
+  if (!tid) return;
+  navigator.clipboard.writeText(tid).then(()=>{
+    const orig = btn.innerHTML;
+    btn.innerHTML = 'Copied';
+    setTimeout(()=>btn.innerHTML = orig, 1000);
+  }).catch(()=>{ alert('Copy failed'); });
+}
+
+function exportCSV(){
+  const j = window._lastLogs;
+  if (!j || !j.logs || j.logs.length===0) { alert('No logs to export'); return; }
+  const rows = [['timestamp','level','source','transaction_type','transaction_id','message']];
+  j.logs.forEach(r => rows.push([`"${r.timestamp}"`,`"${r.level}"`,`"${r.source}"`,`"${r.transaction_type}"`,`"${r.transaction_id}"`,`"${(r.message||'').replace(/"/g,'""') }"`]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'logs_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+</script>
+
+{% endblock %}
