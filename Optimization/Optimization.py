@@ -207,7 +207,7 @@ def Gemini_Verify_Clusters(cluster_df):
 	"""
 
 	# Only run this block for Gemini Developer API
-	client = genai.Client(api_key="AIzaSyC_6IxVYVRatyJ_tMyGfit-Pw0_IgHFG4o")
+	client = genai.Client(api_key="YOUR_API_KEY_HERE")
 
 	response = client.models.generate_content(
 		model="gemini-2.5-pro",
@@ -248,7 +248,5 @@ def Categorize_Products():
 
 		products_project[product_id]["projects"] = project
 	
-	### TODO: Recursively handle split clusters if needed
-	### TITLE:  
 
 	return products_project
